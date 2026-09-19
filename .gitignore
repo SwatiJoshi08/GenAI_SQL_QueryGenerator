@@ -1,0 +1,7 @@
+.env
+node_modules/
+dist/
+.env
+# Optional OS files
+.DS_Store
+Thumbs.db
