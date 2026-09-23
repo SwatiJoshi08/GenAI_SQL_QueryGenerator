@@ -1,0 +1,76 @@
+import { Request, Response, NextFunction } from 'express';
+import { buildPrompt } from './promptBuilder';
+import { callGroq } from './groqClient';
+import { validateResponse, GroqResponse } from './responseValidator';
+import { SchemaIntrospectionService } from '../schema/introspectionService';
+
+/**
+ * Service that generates SQL query candidates using Groq.
+ * 
+ * Steps:
+ * 1. Retrieve the database schema information.
+ * 2. Build the system and user prompts using the dialect and the user's request.
+ * 3. Call the Groq LLM.
+ * 4. Validate the JSON response.
+ * 5. Return the parsed object to the caller.
+ */
+export async function generateQuery(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const { dialect, request: userRequest } = req.body;
+    if (!dialect || !userRequest) {
+      return res.status(400).json({ message: 'Missing required fields: dialect, request' });
+    }
+
+    const schemaInfo = await SchemaIntrospectionService.getSchema(dialect);
+
+    // 2. Build prompts
+    const { system, user } = buildPrompt(dialect, schemaInfo, userRequest);
+
+    // 3. Call Groq LLM
+    const rawResponse = await callGroq(system, user);
+    console.log('Groq raw response:', rawResponse);
+
+    // 4. Strip any markdown fences and validate/parse response with retry
+    const stripFences = (str: string) =>
+      str.replace(/```json\s*([\s\S]*?)```/g, '$1')
+         .replace(/```[\s]*([\s\S]*?)```/g, '$1')
+         .trim();
+
+    let cleaned = stripFences(rawResponse);
+    let parsed: GroqResponse;
+    try {
+      parsed = validateResponse(cleaned);
+    } catch (e: any) {
+      if (e.name === 'ZodError') {
+        // Retry asking Groq to reformat
+        const retryUser = `Please reformat your previous response to match exactly the required JSON schema without any markdown formatting.`;
+        const retryRaw = await callGroq(system, retryUser);
+        console.log('Groq retry raw response:', retryRaw);
+        cleaned = stripFences(retryRaw);
+        parsed = validateResponse(cleaned);
+      } else {
+        throw e;
+      }
+    }
+
+    // 5. Send back to client
+    return res.json(parsed);
+  } catch (err: any) {
+    // Map known errors to appropriate HTTP statuses
+    if (err.name === 'TimeoutError') {
+      return res.status(504).json({ message: 'Groq request timed out' });
+    }
+    if (err.name === 'RateLimitError') {
+      return res.status(429).json({ message: 'Groq rate limit exceeded, please retry later' });
+    }
+    if (err.name === 'ZodError') {
+      return res.status(502).json({ message: 'Invalid response format from Groq', details: err.errors });
+    }
+    console.error('generateQuery error:', err);
+    return res.status(500).json({ message: 'Internal server error', error: err.message });
+  }
+}

@@ -1,0 +1,33 @@
+version: '3.9'
+
+services:
+  mysql:
+    image: mysql:8
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: college_db
+      MYSQL_USER: sql_writer
+      MYSQL_PASSWORD: ${MYSQL_WRITER_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    # Removed unsupported authentication plugin option
+
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_ROOT_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/postgres/init-college.sql:/docker-entrypoint-initdb.d/init-college.sql
+      - ./database/postgres/init-history.sql:/docker-entrypoint-initdb.d/init-history.sql
+
+volumes:
+  mysql_data:
+  postgres_data:

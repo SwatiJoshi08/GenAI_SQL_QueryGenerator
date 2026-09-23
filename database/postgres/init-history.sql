@@ -1,0 +1,38 @@
+-- PostgreSQL initialization script for app_history database
+\c postgres;
+CREATE DATABASE app_history;
+\c app_history;
+
+-- Users table (as per Section 16)
+CREATE TABLE IF NOT EXISTS users (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(150) NOT NULL UNIQUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Query history table
+CREATE TABLE IF NOT EXISTS query_history (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  prompt TEXT NOT NULL,
+  database_type VARCHAR(20) NOT NULL,
+  generated_query TEXT NOT NULL,
+  selected_query TEXT,
+  explanation TEXT,
+  tables_used TEXT,
+  columns_used TEXT,
+  impact_estimate TEXT,
+  execution_status VARCHAR(20),
+  execution_time_ms INTEGER,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create users for app_history (optional)
+CREATE USER sql_reader_history WITH PASSWORD '${POSTGRES_READER_PASSWORD}';
+CREATE USER sql_writer_history WITH PASSWORD '${POSTGRES_WRITER_PASSWORD}';
+
+GRANT CONNECT ON DATABASE app_history TO sql_reader_history, sql_writer_history;
+GRANT USAGE ON SCHEMA public TO sql_reader_history, sql_writer_history;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO sql_reader_history;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO sql_writer_history;
