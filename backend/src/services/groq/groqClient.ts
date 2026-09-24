@@ -16,7 +16,7 @@ export async function callGroq(systemPrompt: string, userPrompt: string): Promis
   try {
     const response = await client.chat.completions.create(
       {
-        model: process.env.GROQ_MODEL,
+        model: process.env.GROQ_MODEL || 'llama3-8b-8192',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },

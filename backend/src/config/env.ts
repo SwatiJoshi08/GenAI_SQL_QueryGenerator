@@ -22,6 +22,7 @@ const EnvSchema = z.object({
   POSTGRES_READER_USER: z.string(),
   POSTGRES_READER_PASSWORD: z.string(),
   POSTGRES_WRITER_USER: z.string(),
+  POSTGRES_WRITER_PASSWORD: z.string(),
   // Groq API credentials
   GROQ_API_KEY: z.string(),
   GROQ_MODEL: z.string(),

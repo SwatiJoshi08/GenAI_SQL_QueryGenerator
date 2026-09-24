@@ -29,15 +29,15 @@ vi.mock('../../db', () => {
             return [tablesRows];
           }
           if (sql.includes('information_schema.COLUMNS')) {
-            const table = params?.[1];
+            const table = params?.[1] as keyof typeof colsRows;
             return [colsRows[table] || []];
           }
           if (sql.includes('KEY_COLUMN_USAGE') && sql.includes('CONSTRAINT_NAME = \'PRIMARY\'')) {
-            const table = params?.[1];
+            const table = params?.[1] as keyof typeof pkRows;
             return [pkRows[table] || []];
           }
           if (sql.includes('KEY_COLUMN_USAGE') && sql.includes('REFERENCED_TABLE_NAME IS NOT NULL')) {
-            const table = params?.[1];
+            const table = params?.[1] as keyof typeof fkRows;
             return [fkRows[table] || []];
           }
           return [[]];

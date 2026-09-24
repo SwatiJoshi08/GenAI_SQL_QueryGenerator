@@ -4,6 +4,9 @@ import { callGroq } from './groqClient';
 import { validateResponse, GroqResponse } from './responseValidator';
 import { SchemaIntrospectionService } from '../schema/introspectionService';
 import { validateSQL } from '../validator/validationService';
+import { analyzeImpact } from '../impact/impactService';
+import { explainQuery } from '../explainer/explainerService';
+import { optimizeQuery } from '../optimizer/optimizerService';
 
 /**
  * Service that generates SQL query candidates using Groq.
@@ -61,7 +64,13 @@ export async function generateQuery(
     // 5. Send back to client with validation per candidate
     const validatedCandidates = await Promise.all(parsed.candidates.map(async (candidate) => {
       const validation = await validateSQL(candidate.sql, dialect as any);
-      return { ...candidate, validation };
+      let impact, explain, optimize;
+      if (validation.valid) {
+        impact = await analyzeImpact(candidate.sql, dialect as any);
+        explain = await explainQuery(candidate.sql, dialect as any);
+        optimize = await optimizeQuery(candidate.sql, dialect as any);
+      }
+      return { ...candidate, validation, impact, explain, optimize };
     }));
     return res.json({ ...parsed, candidates: validatedCandidates });
   } catch (err: any) {

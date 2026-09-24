@@ -31,6 +31,8 @@ export async function analyzeImpact(sql: string, dialect: DBDialect): Promise<Im
     } as ImpactResult;
   }
 
+  if (Array.isArray(ast)) ast = ast[0];
+
   const operation = (ast.type?.toUpperCase && ast.type?.toUpperCase()) || 'UNKNOWN';
   const conn = getReaderConnection(dialect);
   const warnings: string[] = [];
