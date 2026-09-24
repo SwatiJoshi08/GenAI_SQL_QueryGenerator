@@ -79,6 +79,7 @@ export async function validateSQL(sql: string, dialect: Dialect): Promise<Valida
 
   // 7. Validate columns (if any referenced table exists)
   for (const col of usedColumns) {
+    if (col === '*') continue;
     const columnFound = Object.values(tablesMap).some((t: any) =>
       t.columns.some((c: any) => c.name.toLowerCase() === col)
     );

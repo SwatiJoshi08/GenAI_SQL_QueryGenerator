@@ -45,3 +45,11 @@ export function getWriterConnection(dialect: DBDialect): DBConnection {
   }
   throw new Error(`Unsupported dialect: ${dialect}`);
 }
+
+export function getHistoryReaderConnection(): DBConnection {
+  return wrapPg(pg.getHistoryReaderConnection());
+}
+
+export function getHistoryWriterConnection(): DBConnection {
+  return wrapPg(pg.getHistoryWriterConnection());
+}

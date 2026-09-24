@@ -86,17 +86,24 @@ export async function analyzeImpact(sql: string, dialect: DBDialect): Promise<Im
 
   if (operation === 'UPDATE' || operation === 'DELETE') {
     let tableName = '';
-    let whereClause = '';
     if (operation === 'UPDATE') {
       tableName = ast.table?.[0]?.table || '';
-      whereClause = parser.sqlify(ast.where);
     } else {
       tableName = ast.from?.[0]?.table || '';
-      whereClause = parser.sqlify(ast.where);
     }
-    const countSql = whereClause
-      ? `SELECT COUNT(*) as cnt FROM ${tableName} WHERE ${whereClause}`
-      : `SELECT COUNT(*) as cnt FROM ${tableName}`;
+    const dummySelect = {
+      type: 'select',
+      options: null,
+      distinct: null,
+      columns: [{ expr: { type: 'aggr_func', name: 'COUNT', args: { expr: { type: 'star', value: '*' } } }, as: 'cnt' }],
+      from: [{ db: null, table: tableName, as: null }],
+      where: ast.where || null,
+      groupby: null,
+      having: null,
+      orderby: null,
+      limit: null
+    };
+    const countSql = parser.sqlify(dummySelect, { database: dialect === 'postgres' ? 'PostgreSQL' : 'MySQL' });
     const [countRes] = await conn.query(countSql);
     const cnt = Number((countRes as any)[0]?.cnt ?? (countRes as any)[0]?.count ?? 0);
     estimatedRows = cnt;

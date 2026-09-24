@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { saveGeneratedHistory } from '../history/historyService';
 import { buildPrompt } from './promptBuilder';
 import { callGroq } from './groqClient';
 import { validateResponse, GroqResponse } from './responseValidator';
@@ -61,18 +61,32 @@ export async function generateQuery(
       }
     }
 
-    // 5. Send back to client with validation per candidate
-    const validatedCandidates = await Promise.all(parsed.candidates.map(async (candidate) => {
-      const validation = await validateSQL(candidate.sql, dialect as any);
-      let impact, explain, optimize;
-      if (validation.valid) {
-        impact = await analyzeImpact(candidate.sql, dialect as any);
-        explain = await explainQuery(candidate.sql, dialect as any);
-        optimize = await optimizeQuery(candidate.sql, dialect as any);
-      }
-      return { ...candidate, validation, impact, explain, optimize };
-    }));
-    return res.json({ ...parsed, candidates: validatedCandidates });
+    // 5. Save generated history
+    const historyId = await saveGeneratedHistory({
+      user_id: 1,
+      prompt: userRequest,
+      database_type: dialect,
+      generated_query: parsed.candidates,
+    });
+
+    // 6. Validate each candidate
+    const validatedCandidates = await Promise.all(
+      parsed.candidates.map(async (candidate) => {
+        const validation = await validateSQL(candidate.sql, dialect as any);
+        let impact, explain, optimize;
+        if (validation.valid) {
+          impact = await analyzeImpact(candidate.sql, dialect as any);
+          explain = await explainQuery(candidate.sql, dialect as any);
+          optimize = await optimizeQuery(candidate.sql, dialect as any);
+        }
+        return { ...candidate, validation, impact, explain, optimize };
+      })
+    );
+
+    // 7. Return response with history ID
+    return res.json({ ...parsed, candidates: validatedCandidates, historyId });
+
+
   } catch (err: any) {
     // Map known errors to appropriate HTTP statuses
     if (err.name === 'TimeoutError') {
