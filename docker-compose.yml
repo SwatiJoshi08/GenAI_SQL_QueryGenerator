@@ -6,14 +6,17 @@ services:
     container_name: mysql
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_READER_PASSWORD: ${MYSQL_READER_PASSWORD}
       MYSQL_DATABASE: college_db
       MYSQL_USER: sql_writer
       MYSQL_PASSWORD: ${MYSQL_WRITER_PASSWORD}
+
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./database/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./database/mysql/init.sh:/docker-entrypoint-initdb.d/init.sh
     # Removed unsupported authentication plugin option
 
   postgres:

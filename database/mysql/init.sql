@@ -1,64 +1,82 @@
--- MySQL initialization script
--- Create tables
-CREATE TABLE IF NOT EXISTS Department (
-  DepartmentID INT AUTO_INCREMENT PRIMARY KEY,
-  DeptName VARCHAR(100) NOT NULL
-) ENGINE=InnoDB;
+CREATE TABLE Department (
+  DepartmentID INT PRIMARY KEY,
+  DeptName VARCHAR(50) NOT NULL
+);
 
-CREATE TABLE IF NOT EXISTS Employee (
-  EmpID INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE Employee (
+  EmpID INT PRIMARY KEY,
   EmpName VARCHAR(100) NOT NULL,
   Salary DECIMAL(10,2) NOT NULL,
   DepartmentID INT,
-  FOREIGN KEY (DepartmentID) REFERENCES Department(DepartmentID) ON DELETE SET NULL
-) ENGINE=InnoDB;
+  FOREIGN KEY (DepartmentID) REFERENCES Department(DepartmentID)
+);
 
-CREATE TABLE IF NOT EXISTS Students (
-  StudentID INT AUTO_INCREMENT PRIMARY KEY,
-  Name VARCHAR(100) NOT NULL,
+CREATE TABLE Students (
+  StudentID INT PRIMARY KEY,
+  StudentName VARCHAR(100) NOT NULL,
   CGPA DECIMAL(3,2) NOT NULL,
   DepartmentID INT,
   EnrollmentDate DATE,
-  FOREIGN KEY (DepartmentID) REFERENCES Department(DepartmentID) ON DELETE SET NULL
-) ENGINE=InnoDB;
+  FOREIGN KEY (DepartmentID) REFERENCES Department(DepartmentID)
+);
 
--- Seed Departments (6 including IT)
-INSERT INTO Department (DeptName) VALUES
-  ('IT'),
-  ('HR'),
-  ('Finance'),
-  ('Marketing'),
-  ('Operations'),
-  ('Research');
+INSERT INTO Department (DepartmentID, DeptName) VALUES
+  (1,'HR'), (2,'Finance'), (3,'Marketing'), (4,'IT'), (5,'Sales'), (6,'Operations');
 
--- Seed Employees (60+). We'll generate 70 rows with varied salaries.
-INSERT INTO Employee (EmpName, Salary, DepartmentID)
-SELECT CONCAT('Employee_', seq),
-       CASE WHEN MOD(seq, 5) = 0 THEN 60000 + (seq * 100) ELSE 40000 + (seq * 200) END,
-       FLOOR(1 + RAND() * 6)
-FROM (SELECT @row := @row + 1 AS seq FROM (SELECT 0 UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) t1,
-             (SELECT 0 UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) t2,
-             (SELECT @row:=0) r
-LIMIT 70);
+INSERT INTO Employee (EmpID, EmpName, Salary, DepartmentID) VALUES
+  (1,'Alice', 62000, 4), (2,'Bob', 47000, 1), (3,'Carol', 53000, 2), (4,'David', 48000, 3), (5,'Eve', 75000, 4),
+  (6,'Frank', 45000, 5), (7,'Grace', 68000, 6), (8,'Heidi', 52000, 2), (9,'Ivan', 49000, 3), (10,'Judy', 56000, 1),
+  (11,'Karl', 43000, 5), (12,'Liam', 59000, 4), (13,'Mia', 47000, 6), (14,'Nina', 51000, 2), (15,'Oscar', 54000, 3),
+  (16,'Peggy', 46000, 1), (17,'Quinn', 72000, 4), (18,'Rita', 48000, 5), (19,'Sam', 65000, 6), (20,'Trent', 53000, 2),
+  (21,'Uma', 44000, 3), (22,'Victor', 57000, 1), (23,'Wendy', 49000, 4), (24,'Xander', 61000, 5), (25,'Yara', 45000, 6),
+  (26,'Zane', 56000, 2), (27,'Abel', 47000, 3), (28,'Brianna', 68000, 1), (29,'Caleb', 52000, 4), (30,'Diana', 50000, 5),
+  (31,'Ethan', 72000, 6), (32,'Fiona', 49000, 2), (33,'Gus', 53000, 3), (34,'Hannah', 46000, 1), (35,'Ike', 54000, 4),
+  (36,'Jasper', 58000, 5), (37,'Kara', 47000, 6), (38,'Leo', 61000, 2), (39,'Mona', 44000, 3), (40,'Nolan', 59000, 1),
+  (41,'Olive', 45000, 4), (42,'Paula', 56000, 5), (43,'Quentin', 48000, 6), (44,'Rosa', 53000, 2), (45,'Steve', 65000, 3),
+  (46,'Tina', 47000, 1), (47,'Ugo', 54000, 4), (48,'Vera', 62000, 5), (49,'Walt', 50000, 6), (50,'Xenia', 56000, 2),
+  (51,'Yusuf', 47000, 3), (52,'Zoe', 68000, 1), (53,'Aaron', 52000, 4), (54,'Bella', 49000, 5), (55,'Curt', 53000, 6),
+  (56,'Daphne', 46000, 2), (57,'Eli', 54000, 3), (58,'Faith', 58000, 1), (59,'Gabe', 47000, 4), (60,'Hope', 61000, 5),
+  (61,'Ian', 44000, 6), (62,'Jade', 59000, 2), (63,'Kyle', 45000, 3), (64,'Lara', 56000, 1), (65,'Milo', 48000, 4),
+  (66,'Nia', 53000, 5), (67,'Omar', 65000, 6), (68,'Pia', 47000, 2), (69,'Quincy', 54000, 3), (70,'Rex', 68000, 1);
 
--- Seed Students (100+). We'll generate 120 rows.
-INSERT INTO Students (Name, CGPA, DepartmentID, EnrollmentDate)
-SELECT CONCAT('Student_', seq),
-       ROUND(2.0 + RAND() * 2.0, 2),
-       FLOOR(1 + RAND() * 6),
-       DATE_SUB(CURDATE(), INTERVAL FLOOR(RAND()*3650) DAY)
-FROM (SELECT @s := @s + 1 AS seq FROM (SELECT 0 UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) a,
-             (SELECT 0 UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) b,
-             (SELECT @s:=0) r
-LIMIT 120);
+INSERT INTO Students (StudentID, StudentName, CGPA, DepartmentID, EnrollmentDate) VALUES
+  (1,'Student_1',3.50,1,'2023-01-15'), (2,'Student_2',3.50,2,'2023-01-15'), (3,'Student_3',3.50,3,'2023-01-15'), (4,'Student_4',3.50,4,'2023-01-15'), (5,'Student_5',3.50,5,'2023-01-15'), (6,'Student_6',3.50,6,'2023-01-15'),
+  (7,'Student_7',3.50,1,'2023-01-15'), (8,'Student_8',3.50,2,'2023-01-15'), (9,'Student_9',3.50,3,'2023-01-15'), (10,'Student_10',3.50,4,'2023-01-15'), (11,'Student_11',3.50,5,'2023-01-15'), (12,'Student_12',3.50,6,'2023-01-15'),
+  (13,'Student_13',3.50,1,'2023-01-15'), (14,'Student_14',3.50,2,'2023-01-15'), (15,'Student_15',3.50,3,'2023-01-15'), (16,'Student_16',3.50,4,'2023-01-15'), (17,'Student_17',3.50,5,'2023-01-15'), (18,'Student_18',3.50,6,'2023-01-15'),
+  (19,'Student_19',3.50,1,'2023-01-15'), (20,'Student_20',3.50,2,'2023-01-15'), (21,'Student_21',3.50,3,'2023-01-15'), (22,'Student_22',3.50,4,'2023-01-15'), (23,'Student_23',3.50,5,'2023-01-15'), (24,'Student_24',3.50,6,'2023-01-15'),
+  (25,'Student_25',3.50,1,'2023-01-15'), (26,'Student_26',3.50,2,'2023-01-15'), (27,'Student_27',3.50,3,'2023-01-15'), (28,'Student_28',3.50,4,'2023-01-15'), (29,'Student_29',3.50,5,'2023-01-15'), (30,'Student_30',3.50,6,'2023-01-15'),
+  (31,'Student_31',3.50,1,'2023-01-15'), (32,'Student_32',3.50,2,'2023-01-15'), (33,'Student_33',3.50,3,'2023-01-15'), (34,'Student_34',3.50,4,'2023-01-15'), (35,'Student_35',3.50,5,'2023-01-15'), (36,'Student_36',3.50,6,'2023-01-15'),
+  (37,'Student_37',3.50,1,'2023-01-15'), (38,'Student_38',3.50,2,'2023-01-15'), (39,'Student_39',3.50,3,'2023-01-15'), (40,'Student_40',3.50,4,'2023-01-15'), (41,'Student_41',3.50,5,'2023-01-15'), (42,'Student_42',3.50,6,'2023-01-15'),
+  (43,'Student_43',3.50,1,'2023-01-15'), (44,'Student_44',3.50,2,'2023-01-15'), (45,'Student_45',3.50,3,'2023-01-15'), (46,'Student_46',3.50,4,'2023-01-15'), (47,'Student_47',3.50,5,'2023-01-15'), (48,'Student_48',3.50,6,'2023-01-15'),
+  (49,'Student_49',3.50,1,'2023-01-15'), (50,'Student_50',3.50,2,'2023-01-15'), (51,'Student_51',3.50,3,'2023-01-15'), (52,'Student_52',3.50,4,'2023-01-15'), (53,'Student_53',3.50,5,'2023-01-15'), (54,'Student_54',3.50,6,'2023-01-15'),
+  (55,'Student_55',3.50,1,'2023-01-15'), (56,'Student_56',3.50,2,'2023-01-15'), (57,'Student_57',3.50,3,'2023-01-15'), (58,'Student_58',3.50,4,'2023-01-15'), (59,'Student_59',3.50,5,'2023-01-15'), (60,'Student_60',3.50,6,'2023-01-15'),
+  (61,'Student_61',3.50,1,'2023-01-15'), (62,'Student_62',3.50,2,'2023-01-15'), (63,'Student_63',3.50,3,'2023-01-15'), (64,'Student_64',3.50,4,'2023-01-15'), (65,'Student_65',3.50,5,'2023-01-15'), (66,'Student_66',3.50,6,'2023-01-15'),
+  (67,'Student_67',3.50,1,'2023-01-15'), (68,'Student_68',3.50,2,'2023-01-15'), (69,'Student_69',3.50,3,'2023-01-15'), (70,'Student_70',3.50,4,'2023-01-15'), (71,'Student_71',3.50,5,'2023-01-15'), (72,'Student_72',3.50,6,'2023-01-15'),
+  (73,'Student_73',3.50,1,'2023-01-15'), (74,'Student_74',3.50,2,'2023-01-15'), (75,'Student_75',3.50,3,'2023-01-15'), (76,'Student_76',3.50,4,'2023-01-15'), (77,'Student_77',3.50,5,'2023-01-15'), (78,'Student_78',3.50,6,'2023-01-15'),
+  (79,'Student_79',3.50,1,'2023-01-15'), (80,'Student_80',3.50,2,'2023-01-15'), (81,'Student_81',3.50,3,'2023-01-15'), (82,'Student_82',3.50,4,'2023-01-15'), (83,'Student_83',3.50,5,'2023-01-15'), (84,'Student_84',3.50,6,'2023-01-15'),
+  (85,'Student_85',3.50,1,'2023-01-15'), (86,'Student_86',3.50,2,'2023-01-15'), (87,'Student_87',3.50,3,'2023-01-15'), (88,'Student_88',3.50,4,'2023-01-15'), (89,'Student_89',3.50,5,'2023-01-15'), (90,'Student_90',3.50,6,'2023-01-15'),
+  (91,'Student_91',3.50,1,'2023-01-15'), (92,'Student_92',3.50,2,'2023-01-15'), (93,'Student_93',3.50,3,'2023-01-15'), (94,'Student_94',3.50,4,'2023-01-15'), (95,'Student_95',3.50,5,'2023-01-15'), (96,'Student_96',3.50,6,'2023-01-15'),
+  (97,'Student_97',3.50,1,'2023-01-15'), (98,'Student_98',3.50,2,'2023-01-15'), (99,'Student_99',3.50,3,'2023-01-15'), (100,'Student_100',3.50,4,'2023-01-15'), (101,'Student_101',3.50,5,'2023-01-15'), (102,'Student_102',3.50,6,'2023-01-15'),
+  (103,'Student_103',3.50,1,'2023-01-15'), (104,'Student_104',3.50,2,'2023-01-15'), (105,'Student_105',3.50,3,'2023-01-15'), (106,'Student_106',3.50,4,'2023-01-15'), (107,'Student_107',3.50,5,'2023-01-15'), (108,'Student_108',3.50,6,'2023-01-15'),
+  (109,'Student_109',3.50,1,'2023-01-15'), (110,'Student_110',3.50,2,'2023-01-15'), (111,'Student_111',3.50,3,'2023-01-15'), (112,'Student_112',3.50,4,'2023-01-15'), (113,'Student_113',3.50,5,'2023-01-15'), (114,'Student_114',3.50,6,'2023-01-15'),
+  (115,'Student_115',3.50,1,'2023-01-15'), (116,'Student_116',3.50,2,'2023-01-15'), (117,'Student_117',3.50,3,'2023-01-15'), (118,'Student_118',3.50,4,'2023-01-15'), (119,'Student_119',3.50,5,'2023-01-15'), (120,'Student_120',3.50,6,'2023-01-15');
 
--- Create users
-CREATE USER 'sql_reader'@'%' IDENTIFIED BY '${MYSQL_READER_PASSWORD}';
-CREATE USER 'sql_writer'@'%' IDENTIFIED BY '${MYSQL_WRITER_PASSWORD}';
 
-GRANT SELECT ON college_db.* TO 'sql_reader'@'%';
-GRANT SELECT, INSERT, UPDATE, DELETE ON college_db.* TO 'sql_writer'@'%';
 
-FLUSH PRIVILEGES;
 
--- Comment: In the seeded data there are exactly 14 IT employees (DepartmentID = 1) and 5 of them earn > 50000. This enables testing impact estimation.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -3,6 +3,7 @@ import { buildPrompt } from './promptBuilder';
 import { callGroq } from './groqClient';
 import { validateResponse, GroqResponse } from './responseValidator';
 import { SchemaIntrospectionService } from '../schema/introspectionService';
+import { validateSQL } from '../validator/validationService';
 
 /**
  * Service that generates SQL query candidates using Groq.
@@ -57,8 +58,12 @@ export async function generateQuery(
       }
     }
 
-    // 5. Send back to client
-    return res.json(parsed);
+    // 5. Send back to client with validation per candidate
+    const validatedCandidates = await Promise.all(parsed.candidates.map(async (candidate) => {
+      const validation = await validateSQL(candidate.sql, dialect as any);
+      return { ...candidate, validation };
+    }));
+    return res.json({ ...parsed, candidates: validatedCandidates });
   } catch (err: any) {
     // Map known errors to appropriate HTTP statuses
     if (err.name === 'TimeoutError') {
