@@ -52,10 +52,11 @@ export async function executeQuery(req: ExecuteRequest): Promise<ExecuteResponse
       const reader = getReaderConnection(dialect);
       let querySql = sql;
 
-      // Add a simple row cap by wrapping. 
-      // This is a naive wrap, but for this exercise it will limit rows without rewriting complex SQL.
+      // Add a simple row cap by wrapping.
+      // Trim trailing semicolon and whitespace before wrapping.
       if (dialect === 'mysql' || dialect === 'postgres') {
-         querySql = `SELECT * FROM (${sql}) AS _capped_query LIMIT 500`;
+         const cleanedSql = sql.replace(/;+\s*$/,'').trim();
+         querySql = `SELECT * FROM (${cleanedSql}) AS _capped_query LIMIT 500`;
       }
 
       // We'll simulate a 5-second timeout by using Promise.race with a timeout error,

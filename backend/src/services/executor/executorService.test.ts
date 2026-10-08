@@ -144,6 +144,38 @@ describe('Executor Service', () => {
     }));
   });
 
+  // New test for SELECT with trailing semicolon
+  it('enforces SELECT row cap with trailing semicolon', async () => {
+    vi.mocked(validationService.validateSQL).mockResolvedValue({
+      valid: true,
+      errors: [],
+      warnings: [],
+      operation: 'SELECT',
+      riskLevel: 'low',
+    });
+    vi.mocked(impactService.analyzeImpact).mockResolvedValue({
+      operation: 'SELECT',
+      riskLevel: 'low',
+      warnings: [],
+      confirmationRequired: false,
+    });
+    const mockQuery = vi.fn().mockResolvedValue([
+      [{ id: 2 }],
+      [{ name: 'id' }]
+    ]);
+    vi.mocked(db.getReaderConnection).mockReturnValue({
+      query: vi.fn(),
+      getRawPool: () => ({
+        query: mockQuery,
+      } as any),
+    });
+    const res = await executeQuery({ sql: 'SELECT * FROM users;', dialect: 'mysql' });
+    expect(res.success).toBe(true);
+    expect(mockQuery).toHaveBeenCalledWith(expect.objectContaining({
+      sql: 'SELECT * FROM (SELECT * FROM users) AS _capped_query LIMIT 500'
+    }));
+  });
+
   it('rolls back on mismatch safety check', async () => {
     vi.mocked(validationService.validateSQL).mockResolvedValue({
       valid: true,

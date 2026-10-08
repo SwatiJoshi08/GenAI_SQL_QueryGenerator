@@ -9,13 +9,20 @@ import { errorHandler } from './middleware/errorHandler';
 import schemaRouter from './routes/schema';
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = Number(process.env.PORT);
+if (isNaN(PORT)) {
+  console.error('❌ Invalid or missing PORT environment variable');
+  process.exit(1);
+}
 
 app.use(requestLogger);
 app.use(express.json());
 
 app.use('/api/schema', schemaRouter);
+import historyRouter from './routes/history';
+
 app.use('/api/query', queryRouter);
+app.use('/api/history', historyRouter);
 
 app.get('/health', (_, res) => {
   res.json({ status: 'ok' });

@@ -3,6 +3,9 @@
 CREATE DATABASE app_history;
 \c app_history;
 
+DROP TABLE IF EXISTS query_history;
+DROP TABLE IF EXISTS users;
+
 -- Users table (as per Section 16)
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
@@ -17,12 +20,13 @@ CREATE TABLE IF NOT EXISTS query_history (
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
   prompt TEXT NOT NULL,
   database_type VARCHAR(20) NOT NULL,
-  generated_query TEXT NOT NULL,
+  generated_query JSONB,
   selected_query TEXT,
   explanation TEXT,
   tables_used TEXT,
   columns_used TEXT,
   impact_estimate TEXT,
+  error_message TEXT,
   execution_status VARCHAR(20),
   execution_time_ms INTEGER,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
