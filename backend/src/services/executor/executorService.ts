@@ -76,10 +76,10 @@ export async function executeQuery(req: ExecuteRequest): Promise<ExecuteResponse
       } else {
         const pool = reader.getRawPool() as PgPool;
         // Postgres: pg pool query with query_timeout
-        const res = await pool.query({
-          text: querySql,
-          query_timeout: 5000,
-        });
+        // Set a statement timeout of 5 seconds (PostgreSQL) using query config is not directly supported in pg typings.
+        // We'll set the timeout via a SET command before executing the query.
+        await pool.query('SET statement_timeout = 5000');
+        const res = await pool.query(querySql);
         resultRows = res.rows;
         resultCols = res.fields ? res.fields.map(f => f.name) : [];
       }

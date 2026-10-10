@@ -40,12 +40,8 @@ const historyReaderPool = new Pool({
   max: 10,
 });
 // History pool (write credentials for app_history)
-console.log('🔧 History writer pool config:', {
-  user: config.POSTGRES_WRITER_USER,
-  host: config.POSTGRES_HOST,
-  port: Number(config.POSTGRES_PORT),
-  database: 'app_history',
-});
+
+
 const historyWriterPool = new Pool({
   host: config.POSTGRES_HOST,
   port: Number(config.POSTGRES_PORT),

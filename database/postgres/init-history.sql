@@ -40,3 +40,12 @@ GRANT CONNECT ON DATABASE app_history TO sql_reader_history, sql_writer_history;
 GRANT USAGE ON SCHEMA public TO sql_reader_history, sql_writer_history;
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO sql_reader_history;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO sql_writer_history;
+-- Default privileges for generic roles
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO sql_writer;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO sql_reader;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO sql_reader, sql_writer;
+-- Explicit grants on specific tables
+GRANT SELECT ON TABLE query_history TO sql_reader;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE query_history TO sql_writer;
+GRANT SELECT ON TABLE users TO sql_reader;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE users TO sql_writer;

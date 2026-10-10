@@ -91,17 +91,19 @@ export async function analyzeImpact(sql: string, dialect: DBDialect): Promise<Im
     } else {
       tableName = ast.from?.[0]?.table || '';
     }
-    const dummySelect = {
+    // Clone the original AST and replace the SELECT columns with COUNT(*).
+    // This preserves the original FROM clause (including any joins/aliases) and the WHERE clause.
+    const dummySelect: any = {
+      ...ast,
       type: 'select',
+      columns: [{ expr: { type: 'aggr_func', name: 'COUNT', args: { expr: { type: 'star', value: '*' } } }, as: 'cnt' }],
+      // Remove unnecessary clauses for a clean COUNT query.
       options: null,
       distinct: null,
-      columns: [{ expr: { type: 'aggr_func', name: 'COUNT', args: { expr: { type: 'star', value: '*' } } }, as: 'cnt' }],
-      from: [{ db: null, table: tableName, as: null }],
-      where: ast.where || null,
       groupby: null,
       having: null,
       orderby: null,
-      limit: null
+      limit: null,
     };
     const countSql = parser.sqlify(dummySelect, { database: dialect === 'postgres' ? 'PostgreSQL' : 'MySQL' });
     const [countRes] = await conn.query(countSql);

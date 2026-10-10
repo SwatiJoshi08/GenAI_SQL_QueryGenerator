@@ -7,6 +7,7 @@ import { validateSQL } from '../validator/validationService';
 import { analyzeImpact } from '../impact/impactService';
 import { explainQuery } from '../explainer/explainerService';
 import { optimizeQuery } from '../optimizer/optimizerService';
+import { Request, Response, NextFunction } from 'express';
 
 /**
  * Service that generates SQL query candidates using Groq.
@@ -36,7 +37,7 @@ export async function generateQuery(
 
     // 3. Call Groq LLM
     const rawResponse = await callGroq(system, user);
-    console.log('Groq raw response:', rawResponse);
+
 
     // 4. Strip any markdown fences and validate/parse response with retry
     const stripFences = (str: string) =>
@@ -53,7 +54,7 @@ export async function generateQuery(
         // Retry asking Groq to reformat
         const retryUser = `Please reformat your previous response to match exactly the required JSON schema without any markdown formatting.`;
         const retryRaw = await callGroq(system, retryUser);
-        console.log('Groq retry raw response:', retryRaw);
+
         cleaned = stripFences(retryRaw);
         parsed = validateResponse(cleaned);
       } else {

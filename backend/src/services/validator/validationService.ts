@@ -21,12 +21,13 @@ export async function validateSQL(sql: string, dialect: Dialect): Promise<Valida
     warnings: [],
   };
 
+  const parserDb = dialect === 'postgres' ? 'PostgreSQL' : 'MySQL';
   // 1. Parse SQL
   let ast: any;
   try {
     const parser = new Parser();
     // astify returns a single AST object for a single statement, or an array for multiple.
-    ast = parser.astify(sql, { database: dialect });
+    ast = parser.astify(sql, { database: parserDb });
   } catch (e: any) {
     result.valid = false;
     result.errors.push(`Syntax error: ${e.message}`);
@@ -58,10 +59,10 @@ export async function validateSQL(sql: string, dialect: Dialect): Promise<Valida
 
   // 5. Extract tables & columns using parser helpers
   const parser = new Parser();
-  const tableList = parser.tableList(sql, { database: dialect }); // e.g. "select::null::users"
-  const columnList = parser.columnList(sql, { database: dialect });
+  const tableList = parser.tableList(sql, { database: parserDb }); // e.g. "select::null::users"
+  const columnList = parser.columnList(sql, { database: parserDb });
 
-  const strip = (s: string) => s.split('::').pop() as string;
+  const strip = (s: string) => (s.split('::').pop() || '').replace(/["`]/g, '');
   const usedTables = tableList.map(strip).map(t => t.toLowerCase());
   const usedColumns = columnList.map(strip).map(c => {
     const lowered = c.toLowerCase();
